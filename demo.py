@@ -1,6 +1,8 @@
 import numpy as np
 
 from kdtree import Node
+from visualization import visualize_2d_tree
+
 
 if __name__ == '__main__':
     np.random.seed(12)
@@ -11,4 +13,4 @@ if __name__ == '__main__':
 
     tree = Node.create([x for x in map(tuple, data)], 2)
 
-    Node.visualize_2d_tree(tree)
+    visualize_2d_tree(tree)
