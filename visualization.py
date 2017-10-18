@@ -1,3 +1,12 @@
+"""
+    File name: visualization.py
+    License: MIT
+    Author: Orlov Michael
+    Date created: 12.10.2017
+    Python Version: 3.5
+    Description: visualization of kd-tree by levels
+"""
+
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
