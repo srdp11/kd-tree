@@ -50,7 +50,7 @@ class Node(object):
         False
         """
 
-        return (not self.data) or (not self.left and not self.right)
+        return (not self.data) or (all(not bool(c) for c, p in self.children))
 
     @property
     def height(self):
@@ -69,10 +69,11 @@ class Node(object):
         """
 
         if self.is_leaf:
-            return 1
+            return 0
         else:
             return 1 + max(self.left.height, self.right.height)
 
+    @property
     def children(self):
         """
         Returns an iterator for the non-empty children of the Node

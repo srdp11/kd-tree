@@ -9,6 +9,8 @@
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from math import floor
+from discrete_slider import DiscreteSlider
 
 
 def visualize_2d_tree(tree):
@@ -79,5 +81,99 @@ def visualize_2d_tree(tree):
     axes.set_ylim([-5, 5])
 
     visualize(tree, axes, 0, axes.get_xlim(), axes.get_ylim(), tree.height, 'r', True)
+
+    plt.show()
+
+
+def split_tree_by_levels(tree):
+    nodes_info_map = {}
+    leaf_points = []
+
+    def iter(node, level):
+        if not node.is_leaf:
+            if level in nodes_info_map.keys():
+                nodes_info_map[level].append(node.data)
+            else:
+                nodes_info_map[level] = [node.data]
+        else:
+            leaf_points.append(node.data)
+
+        if node.left:
+            iter(node.left, level + 1)
+
+        if node.right:
+            iter(node.right, level + 1)
+
+    iter(tree, 1)
+
+    return nodes_info_map, leaf_points
+
+
+def calculate_lims(tree):
+    if not tree:
+        return None
+
+    xmin = tree.data[0]
+    xmax = tree.data[0]
+
+    ymin = tree.data[1]
+    ymax = tree.data[1]
+
+    for node in tree.level_order():
+        xmin = min(xmin, node.data[0])
+        xmax = max(xmax, node.data[0])
+
+        ymin = min(ymin, node.data[1])
+        ymax = max(ymax, node.data[1])
+
+    return (xmin - 0.3, xmax + 0.3), (ymin - 0.3, ymax + 0.3)
+
+
+def plot_points(axes, points, style):
+    axes.plot([node_info[0] for node_info in points],
+              [node_info[1] for node_info in points],
+              style)
+
+
+def visualize_2d_tree_by_levels(tree):
+    nodes_info, leaf_points = split_tree_by_levels(tree)
+
+    plt.subplots_adjust(left=0.15, bottom=0.25)
+
+    axes_nodes = plt.axes()
+
+    xlim, ylim = calculate_lims(tree)
+
+    axes_nodes.set_xlim(xlim)
+    axes_nodes.set_ylim(ylim)
+
+    for node in tree.level_order():
+        axes_nodes.plot(node.data[0], node.data[1], 'r*')
+
+    axes = plt.axes([0.15, 0.1, 0.2, 0.03])
+
+    slider_levels = DiscreteSlider(axes, 'Levels number', 0, tree.height, valinit=0, valfmt='%d')
+
+    axes_level_nodes = plt.axes()
+
+    def update(value):
+        axes_level_nodes.cla()
+
+        curr_level = floor(value)
+
+        plot_points(axes_level_nodes, leaf_points, 'r*')
+
+        for i in range(1, max(nodes_info.keys()) + 1):
+            if i < curr_level + 1:
+                plot_points(axes_level_nodes, nodes_info[i], 'b*')
+            else:
+                plot_points(axes_level_nodes, nodes_info[i], 'r*')
+
+        axes_nodes.set_xlim(xlim)
+        axes_nodes.set_ylim(ylim)
+
+        plt.draw()
+
+    slider_levels.on_changed(update)
 
     plt.show()
