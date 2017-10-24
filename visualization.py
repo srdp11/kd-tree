@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from math import floor
 from discrete_slider import DiscreteSlider
-
+from kdtree import Node
 
 def vector_coords(x, y):
     return (x[0], y[0]), (x[1] - x[0], y[1] - y[0])
@@ -44,50 +44,71 @@ def draw_area(axes, x_lims, y_lims, color):
                   color=color, alpha=0.4))
 
 
+def create_visualization_tree(node, x_lims, y_lims, curr_axis=0, up_left_direction=True, color='r'):
+    if not node or node.is_leaf:
+        data = tuple() if not node else node.data
+        return Node({'point': data, 'x_lims': x_lims, 'y_lims': y_lims,
+                     'color': color}, None, None)
+
+    x_lims_left = (x_lims[0], node.data[0])
+    x_lims_right = (node.data[0], x_lims[1])
+
+    y_lims_left = (y_lims[0], node.data[1])
+    y_lims_right = (node.data[1], y_lims[1])
+
+    if up_left_direction:
+        left_side_color = 'r'
+        right_side_color = 'b'
+    else:
+        left_side_color = 'b'
+        right_side_color = 'r'
+
+    left_side_flag = curr_axis == 0
+    right_side_flag = not left_side_flag
+
+    next_left_x_lims = x_lims_left if curr_axis == 0 else x_lims
+    next_right_x_lims = x_lims_right if curr_axis == 0 else x_lims
+    next_left_y_lims = y_lims if curr_axis == 0 else y_lims_left
+    next_right_y_lims = y_lims if curr_axis == 0 else y_lims_right
+
+    next_axis = (curr_axis + 1) % 2
+
+    left = create_visualization_tree(node.left, next_left_x_lims, next_left_y_lims, next_axis,
+                                     left_side_flag, left_side_color)
+    right = create_visualization_tree(node.right, next_right_x_lims, next_right_y_lims, next_axis,
+                                      right_side_flag, right_side_color)
+
+    return Node({'point': node.data, 'up_left_direction': up_left_direction, 'curr_axis': curr_axis,
+                 'x_lims': x_lims, 'y_lims': y_lims, 'color': color},
+                left, right)
+
+
 def visualize_2d_tree(tree):
-    def visualize(node, curr_axis, up_left_direction, axes, x_lims, y_lims, color, width):
-        def visualize_side(node, curr_axis, up_left_direction, x_lims, y_lims, color, width):
-            if node.is_leaf:
-                draw_area(axes, x_lims, y_lims, color)
-            elif node:
-                visualize(node, curr_axis, up_left_direction, axes, x_lims, y_lims, color, width)
+    xlim, ylim = calculate_lims(tree)
 
-        visualize_bound(node.data[curr_axis], curr_axis, up_left_direction, axes, x_lims, y_lims, width, color)
-
-        x_lims_left = (x_lims[0], node.data[0])
-        x_lims_right = (node.data[0], x_lims[1])
-
-        y_lims_left = (y_lims[0], node.data[1])
-        y_lims_right = (node.data[1], y_lims[1])
-
-        left_side_flag = curr_axis == 0
-        right_side_flag = not left_side_flag
-
-        if up_left_direction:
-            left_side_color = 'r'
-            right_side_color = 'b'
-        else:
-            left_side_color = 'b'
-            right_side_color = 'r'
-
-        next_axis = (curr_axis + 1) % 2
-        width -= 1
-
-        next_left_x_lims = x_lims_left if curr_axis == 0 else x_lims
-        next_right_x_lims = x_lims_right if curr_axis == 0 else x_lims
-        next_left_y_lims = y_lims if curr_axis == 0 else y_lims_left
-        next_right_y_lims = y_lims if curr_axis == 0 else y_lims_right
-
-        visualize_side(node.left, next_axis, left_side_flag, next_left_x_lims, next_left_y_lims, left_side_color, width)
-        visualize_side(node.right, next_axis, right_side_flag, next_right_x_lims, next_right_y_lims, right_side_color, width)
-
-    # TODO: calculate xlims and ylims
     axes = plt.gca()
 
-    axes.set_xlim([-5, 5])
-    axes.set_ylim([-5, 5])
+    axes.set_xlim(xlim)
+    axes.set_ylim(ylim)
 
-    visualize(tree, 0, True, axes, axes.get_xlim(), axes.get_ylim(), 'r', tree.height)
+    visualization_tree = create_visualization_tree(tree, axes.get_xlim(), axes.get_ylim())
+
+    for node in visualization_tree.level_order():
+        x_lims = node.data['x_lims']
+        y_lims = node.data['y_lims']
+        color = node.data['color']
+
+        if node.is_leaf:
+            draw_area(axes, x_lims, y_lims, color)
+        else:
+            point = node.data['point']
+            curr_axis = node.data['curr_axis']
+            up_left_direction = node.data['up_left_direction']
+
+            visualize_bound(point[curr_axis], curr_axis, up_left_direction,
+                            axes, x_lims, y_lims, -1, color)
+
+            axes.plot(*point, 'g*')
 
     plt.show()
 
