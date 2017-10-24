@@ -13,40 +13,46 @@ from math import floor
 from discrete_slider import DiscreteSlider
 
 
+def vector_coords(x, y):
+    return (x[0], y[0]), (x[1] - x[0], y[1] - y[0])
+
+
+def visualize_bound(coord, curr_axis, up_left_direction, axes, x_lims, y_lims, width, color):
+    bound_coords = [coord, coord]
+
+    if curr_axis == 0:
+        x = bound_coords
+        y = y_lims
+    else:
+        x = x_lims
+        y = bound_coords
+
+    if curr_axis == 0:
+        y = sorted(y, reverse=not up_left_direction)
+    else:
+        x = sorted(x, reverse=up_left_direction)
+
+    start_point, end_point = vector_coords(x, y)
+
+    axes.quiver(*start_point, *end_point, angles='xy', scale_units='xy', scale=1, color=color)
+
+
+def draw_area(axes, x_lims, y_lims, color):
+    axes.add_patch(
+        Rectangle((x_lims[0], y_lims[0]),
+                  x_lims[1] - x_lims[0], y_lims[1] - y_lims[0],
+                  color=color, alpha=0.4))
+
+
 def visualize_2d_tree(tree):
-    def visualize(node, axes, curr_axis, x_lims, y_lims, width, color, up_left_direction):
-        def vector_coords(x, y):
-            return (x[0], y[0]), (x[1] - x[0], y[1] - y[0])
-
-        def visualize_bound():
-            bound_coords = [node.data[curr_axis], node.data[curr_axis]]
-
-            if curr_axis == 0:
-                x = bound_coords
-                y = y_lims
-            else:
-                x = x_lims
-                y = bound_coords
-
-            if curr_axis == 0:
-                y = sorted(y, reverse=not up_left_direction)
-            else:
-                x = sorted(x, reverse=up_left_direction)
-
-            start_point, end_point = vector_coords(x, y)
-
-            axes.quiver(*start_point, *end_point, angles='xy', scale_units='xy', scale=1, color=color)
-
-        def visualize_side(node, curr_axis, x_lims, y_lims, width, color, up_left_direction):
+    def visualize(node, curr_axis, up_left_direction, axes, x_lims, y_lims, color, width):
+        def visualize_side(node, curr_axis, up_left_direction, x_lims, y_lims, color, width):
             if node.is_leaf:
-                axes.add_patch(
-                    Rectangle((x_lims[0], y_lims[0]),
-                              x_lims[1] - x_lims[0], y_lims[1] - y_lims[0],
-                              color=color, alpha=0.4))
+                draw_area(axes, x_lims, y_lims, color)
             elif node:
-                visualize(node, axes, curr_axis, x_lims, y_lims, width, color, up_left_direction)
+                visualize(node, curr_axis, up_left_direction, axes, x_lims, y_lims, color, width)
 
-        visualize_bound()
+        visualize_bound(node.data[curr_axis], curr_axis, up_left_direction, axes, x_lims, y_lims, width, color)
 
         x_lims_left = (x_lims[0], node.data[0])
         x_lims_right = (node.data[0], x_lims[1])
@@ -67,12 +73,13 @@ def visualize_2d_tree(tree):
         next_axis = (curr_axis + 1) % 2
         width -= 1
 
-        if curr_axis == 0:
-            visualize_side(node.left, next_axis, x_lims_left, y_lims, width, left_side_color, left_side_flag)
-            visualize_side(node.right, next_axis, x_lims_right, y_lims, width, right_side_color, right_side_flag)
-        else:
-            visualize_side(node.left, next_axis, x_lims, y_lims_left, width, left_side_color, left_side_flag)
-            visualize_side(node.right, next_axis, x_lims, y_lims_right, width, right_side_color, right_side_flag)
+        next_left_x_lims = x_lims_left if curr_axis == 0 else x_lims
+        next_right_x_lims = x_lims_right if curr_axis == 0 else x_lims
+        next_left_y_lims = y_lims if curr_axis == 0 else y_lims_left
+        next_right_y_lims = y_lims if curr_axis == 0 else y_lims_right
+
+        visualize_side(node.left, next_axis, left_side_flag, next_left_x_lims, next_left_y_lims, left_side_color, width)
+        visualize_side(node.right, next_axis, right_side_flag, next_right_x_lims, next_right_y_lims, right_side_color, width)
 
     # TODO: calculate xlims and ylims
     axes = plt.gca()
@@ -80,7 +87,7 @@ def visualize_2d_tree(tree):
     axes.set_xlim([-5, 5])
     axes.set_ylim([-5, 5])
 
-    visualize(tree, axes, 0, axes.get_xlim(), axes.get_ylim(), tree.height, 'r', True)
+    visualize(tree, 0, True, axes, axes.get_xlim(), axes.get_ylim(), 'r', tree.height)
 
     plt.show()
 
