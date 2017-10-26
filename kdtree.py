@@ -69,7 +69,7 @@ class Node(object):
         """
 
         if self.is_leaf:
-            return 0
+            return 1
         else:
             return 1 + max(self.left.height, self.right.height)
 

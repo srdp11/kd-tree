@@ -46,9 +46,8 @@ def draw_area(axes, x_lims, y_lims, color):
 
 
 def create_visualization_tree(node, x_lims, y_lims, curr_axis=0, up_left_direction=True, color='r'):
-    if not node or node.is_leaf:
-        data = tuple() if not node else node.data
-        return Node({'point': data, 'x_lims': x_lims, 'y_lims': y_lims,
+    if not node:
+        return Node({'point': tuple(), 'x_lims': x_lims, 'y_lims': y_lims,
                      'color': color}, None, None)
 
     x_lims_left = (x_lims[0], node.data[0])
@@ -99,7 +98,7 @@ def visualize_2d_tree(tree):
         y_lims = node.data['y_lims']
         color = node.data['color']
 
-        if node.is_leaf:
+        if not node:
             draw_area(axes, x_lims, y_lims, color)
         else:
             point = node.data['point']
@@ -116,16 +115,13 @@ def visualize_2d_tree(tree):
 
 def split_tree_by_levels(tree):
     nodes_info_map = {}
-    leaf_points = []
 
     def iter(node, level):
-        if not node.is_leaf:
+        if node:
             if level in nodes_info_map.keys():
                 nodes_info_map[level].append(node.data)
             else:
                 nodes_info_map[level] = [node.data]
-        else:
-            leaf_points.append(node.data)
 
         if node.left:
             iter(node.left, level + 1)
@@ -135,7 +131,7 @@ def split_tree_by_levels(tree):
 
     iter(tree, 1)
 
-    return nodes_info_map, leaf_points
+    return nodes_info_map
 
 
 def calculate_lims(tree):
@@ -160,6 +156,7 @@ def calculate_lims(tree):
 
 def plot_points(points, visualize_bounds, axes, style):
     for point in points:
+
         if len(point['point']) == 0:
             continue
 
@@ -188,17 +185,9 @@ def visualize_2d_tree_by_levels(tree):
     axes_nodes.set_ylim(ylim)
 
     visualization_tree = create_visualization_tree(tree, axes_nodes.get_xlim(), axes_nodes.get_ylim())
-    nodes_info, leaf_points = split_tree_by_levels(visualization_tree)
+    nodes_info = split_tree_by_levels(visualization_tree)
 
-    #print(leaf_points)
-
-    # for node in tree.level_order():
-    #     axes_nodes.plot(node.data[0], node.data[1], 'r*')
-
-    plot_points(leaf_points, False, axes_nodes, 'r*')
-    # axes_nodes.plot([node_info[0] for node_info in leaf_points],
-    #                 [node_info[1] for node_info in leaf_points],
-    #                 'r*')
+    #plot_points(nodes_info, False, axes_nodes, 'r*')
 
     axes = plt.axes([0.15, 0.1, 0.2, 0.03])
 
@@ -210,8 +199,6 @@ def visualize_2d_tree_by_levels(tree):
         axes_level_nodes.cla()
 
         curr_level = floor(value)
-
-        plot_points(leaf_points, False, axes_nodes, 'r*')
 
         for i in range(1, max(nodes_info.keys()) + 1):
             if i < curr_level + 1:
