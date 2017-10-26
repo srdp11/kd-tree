@@ -11,7 +11,7 @@
 import numpy as np
 
 from kdtree import create
-from visualization import visualize_2d_tree
+from visualization import visualize_2d_tree, visualize_2d_tree_by_levels
 
 
 if __name__ == '__main__':
@@ -23,4 +23,5 @@ if __name__ == '__main__':
 
     tree = create([x for x in map(tuple, data)], 2)
 
-    visualize_2d_tree(tree)
+    #visualize_2d_tree(tree)
+    visualize_2d_tree_by_levels(tree)

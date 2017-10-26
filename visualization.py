@@ -13,6 +13,7 @@ from math import floor
 from discrete_slider import DiscreteSlider
 from kdtree import Node
 
+
 def vector_coords(x, y):
     return (x[0], y[0]), (x[1] - x[0], y[1] - y[0])
 
@@ -157,15 +158,26 @@ def calculate_lims(tree):
     return (xmin - 0.3, xmax + 0.3), (ymin - 0.3, ymax + 0.3)
 
 
-def plot_points(axes, points, style):
-    axes.plot([node_info[0] for node_info in points],
-              [node_info[1] for node_info in points],
-              style)
+def plot_points(points, visualize_bounds, axes, style):
+    for point in points:
+        if len(point['point']) == 0:
+            continue
+
+        axes.plot(point['point'][0], point['point'][1], style)
+
+        if visualize_bounds:
+            point_data = point['point']
+            curr_axis = point['curr_axis']
+            up_left_direction = point['up_left_direction']
+            x_lims = point['x_lims']
+            y_lims = point['y_lims']
+            color = point['color']
+
+            visualize_bound(point_data[curr_axis], curr_axis, up_left_direction,
+                            axes, x_lims, y_lims, -1, color)
 
 
 def visualize_2d_tree_by_levels(tree):
-    nodes_info, leaf_points = split_tree_by_levels(tree)
-
     plt.subplots_adjust(left=0.15, bottom=0.25)
 
     axes_nodes = plt.axes()
@@ -175,8 +187,18 @@ def visualize_2d_tree_by_levels(tree):
     axes_nodes.set_xlim(xlim)
     axes_nodes.set_ylim(ylim)
 
-    for node in tree.level_order():
-        axes_nodes.plot(node.data[0], node.data[1], 'r*')
+    visualization_tree = create_visualization_tree(tree, axes_nodes.get_xlim(), axes_nodes.get_ylim())
+    nodes_info, leaf_points = split_tree_by_levels(visualization_tree)
+
+    #print(leaf_points)
+
+    # for node in tree.level_order():
+    #     axes_nodes.plot(node.data[0], node.data[1], 'r*')
+
+    plot_points(leaf_points, False, axes_nodes, 'r*')
+    # axes_nodes.plot([node_info[0] for node_info in leaf_points],
+    #                 [node_info[1] for node_info in leaf_points],
+    #                 'r*')
 
     axes = plt.axes([0.15, 0.1, 0.2, 0.03])
 
@@ -189,13 +211,13 @@ def visualize_2d_tree_by_levels(tree):
 
         curr_level = floor(value)
 
-        plot_points(axes_level_nodes, leaf_points, 'r*')
+        plot_points(leaf_points, False, axes_nodes, 'r*')
 
         for i in range(1, max(nodes_info.keys()) + 1):
             if i < curr_level + 1:
-                plot_points(axes_level_nodes, nodes_info[i], 'b*')
+                plot_points(nodes_info[i], True, axes_level_nodes, 'b*')
             else:
-                plot_points(axes_level_nodes, nodes_info[i], 'r*')
+                plot_points(nodes_info[i], False, axes_level_nodes, 'r*')
 
         axes_nodes.set_xlim(xlim)
         axes_nodes.set_ylim(ylim)
