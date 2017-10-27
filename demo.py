@@ -12,7 +12,7 @@ import numpy as np
 
 from kdtree import create
 from visualization import visualize_2d_tree, visualize_2d_tree_by_levels
-
+from algorithms import create_paths, tracing_convex_hull_points
 
 if __name__ == '__main__':
     np.random.seed(12)
@@ -24,4 +24,6 @@ if __name__ == '__main__':
     tree = create([x for x in map(tuple, data)], 2)
 
     #visualize_2d_tree(tree)
-    visualize_2d_tree_by_levels(tree)
+    #visualize_2d_tree_by_levels(tree)
+    #print(create_paths(tree))
+    print(tracing_convex_hull_points(tree))
