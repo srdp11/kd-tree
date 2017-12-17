@@ -67,11 +67,36 @@ class Node(object):
         >>> create([ (1, 2), (2, 3) ]).height()
         2
         """
+        try:
+            if self.is_leaf:
+                return 1
+            else:
+                return 1 + max(self.left.height, self.right.height)
+        except AttributeError:
+            return 0
 
-        if self.is_leaf:
-            return 1
-        else:
-            return 1 + max(self.left.height, self.right.height)
+    def inorder(self):
+        """ iterator for nodes: left, root, right """
+
+        if not self:
+            return
+
+        if self.left:
+            for x in self.left.inorder():
+                yield x
+
+        yield self
+
+        if self.right:
+            for x in self.right.inorder():
+                yield x
+
+    def rebalance(self):
+        """
+        Returns the (possibly new) root of the rebalanced tree
+        """
+
+        return create([x.data for x in self.inorder()], dimension=2)
 
     @property
     def children(self):
