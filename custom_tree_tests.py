@@ -166,19 +166,6 @@ class TestTree(unittest.TestCase):
         self.assertTrue(are_equal_double_lists(hull_tree, hull_pruned_tree))
 
 
-def print_source_and_pruned(source_tree, pruned_tree):
-    source_tree_data = [x for x in source_tree.level_order()]
-    pruned_tree_data = [x for x in pruned_tree.level_order()]
-
-    print("source tree: {}".format(len(source_tree_data)))
-    print("\n".join([str(x) for x in source_tree_data]))
-
-    print("--------------------------------------------------------")
-
-    print("pruned tree: {}".format(len(pruned_tree_data)))
-    print("\n".join([str(x) for x in pruned_tree_data]))
-
-
 def generate_points(points_count):
     size = (points_count, 2)
     return np.random.uniform(0, 4, size)
